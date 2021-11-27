@@ -1,15 +1,12 @@
 import time
 import subprocess
 
-def main():
-    address = input("Enter a domain: ")
+def main(domain_name):
     running = True
     iteration = 0
 
     while(running):
-        average_TTL_for_hop, ips = run_tracert_command(address)
-
-        print("***************************************")
+        average_TTL_for_hop, ips = run_tracert_command(domain_name)
 
         time.sleep(10)
         iteration += 1
@@ -34,12 +31,12 @@ def run_tracert_command(address):
             
                 print(average_TTL, ip)
 
-                #average_TTL_for_hop.append(average_TTL)
-                #ips.append(ip)
+                average_TTL_for_hop.append(average_TTL)
+                ips.append(ip)
         if not data: break
 
     response.wait()
-    return average_TTL_for_hop, ip
+    return average_TTL_for_hop, ips
 
 def parse_data(data):
     hops = []
@@ -72,6 +69,3 @@ def parse_data(data):
         average_TTL = average_TTL / counter
 
     return average_TTL, ip
-
-if __name__ == '__main__':
-    main()
