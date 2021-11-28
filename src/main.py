@@ -4,12 +4,10 @@ import subprocess
 def main(domain_name):
     running = True
     iteration = 0
+    
+    average_TTL_for_hop, ips = run_tracert_command(domain_name)
 
-    while(running):
-        average_TTL_for_hop, ips = run_tracert_command(domain_name)
-
-        time.sleep(10)
-        iteration += 1
+    return average_TTL_for_hop, ips
 
 
 def run_tracert_command(address):
@@ -17,6 +15,9 @@ def run_tracert_command(address):
     average_TTL_for_hop = []
 
     response = subprocess.Popen("tracert -d %s" % address, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+    
+    first_lag = False
+    second_lag = False
 
     while True:
         data = response.stdout.readline()
@@ -25,12 +26,21 @@ def run_tracert_command(address):
             pass
         else:
             split_data = data.strip().split()
-            print(split_data)
+            #print(split_data)
             if "over" not in split_data and len(split_data) >= 6:
                 average_TTL, ip = parse_data(list(split_data))
             
-                print(average_TTL, ip)
+                #print(average_TTL, ip)
 
+                if average_TTL == 400:
+                    first_lag = True
+                if first_lag and average_TTL == 400:
+                    second_lag = True
+                if second_lag and average_TTL == 400:
+                    average_TTL_for_hop = [400] * 20
+                    ips = ['*'] * 20
+                    return average_TTL_for_hop, ips
+                
                 average_TTL_for_hop.append(average_TTL)
                 ips.append(ip)
         if not data: break
@@ -64,7 +74,7 @@ def parse_data(data):
             counter += 1
 
     if counter == 0:
-        average_TTL = 999
+        average_TTL = 400
     else:
         average_TTL = average_TTL / counter
 
