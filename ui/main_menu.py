@@ -97,6 +97,8 @@ class Ui_MainWindow(object):
          
     def btnstate(self):
             self.domain_name = self.textEdit.toPlainText()
+            if len(self.domain_name) == 0:
+                self.domain_name = "Google.com"
             self.openWindow()
             self.ui.update_domain_name(self.domain_name)
             self.worker = WorkerThread(self.domain_name)
@@ -124,8 +126,6 @@ class WorkerThread(QThread):
             average_TTL, ips = main.main(self.domain_name)
             self.signal.emit(average_TTL, ips)
         
-            
-            
             
 if __name__ == "__main__":
     import sys
