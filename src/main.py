@@ -14,7 +14,7 @@ def run_tracert_command(address):
     ips = []
     average_TTL_for_hop = []
 
-    response = subprocess.Popen("tracert -d %s" % address, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+    response = subprocess.Popen("tracert -h 20 -w 400 -d %s" % address, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
     
     first_lag = False
     second_lag = False
@@ -26,7 +26,7 @@ def run_tracert_command(address):
             pass
         else:
             split_data = data.strip().split()
-            #print(split_data)
+            print(split_data)
             if "over" not in split_data and len(split_data) >= 6:
                 average_TTL, ip = parse_data(list(split_data))
             
@@ -34,8 +34,14 @@ def run_tracert_command(address):
 
                 if average_TTL == 400:
                     first_lag = True
+                    average_TTL_for_hop.append(average_TTL)
+                    ips.append(ip)
+                    continue
                 if first_lag and average_TTL == 400:
                     second_lag = True
+                    average_TTL_for_hop.append(average_TTL)
+                    ips.append(ip)
+                    continue
                 if second_lag and average_TTL == 400:
                     average_TTL_for_hop = [400] * 20
                     ips = ['*'] * 20

@@ -122,7 +122,7 @@ class WorkerThread(QThread):
         self.domain_name = domain_name
     
     def run(self):
-        for _ in range (10):
+        while True:
             average_TTL, ips = main.main(self.domain_name)
             self.signal.emit(average_TTL, ips)
         
