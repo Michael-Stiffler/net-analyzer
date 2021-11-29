@@ -9,10 +9,16 @@ from statistics import mean
 import time, os, sys
 from datetime import datetime
 
+import mysql.connector
+from mysql.connector import Error
+import pandas as pd
+
+from dotenv import load_dotenv
+
 class Ui_SecondWindow(QMainWindow):
     def __init__(self):
         super().__init__()
- 
+
         self.title = ""
         self.top = 400
         self.left = 150
@@ -22,7 +28,7 @@ class Ui_SecondWindow(QMainWindow):
         self.pixmap = QPixmap(1200, 800)
         self.pixmap.fill(Qt.transparent)
         
-        self.ips = [None] * 20
+        self.ips = ["0"] * 20
         
         self.rects = [(0, 0, 0, 0),(0, 0, 0, 0),(0, 0, 0, 0),(0, 0, 0, 0),
                       (0, 0, 0, 0),(0, 0, 0, 0),(0, 0, 0, 0),(0, 0, 0, 0),
@@ -40,8 +46,103 @@ class Ui_SecondWindow(QMainWindow):
         self.domain_name = ""
         
         self.list_length = None
+        
+        load_dotenv()
+        
+        self.create_session_table = """
+            CREATE TABLE session (
+            id VARCHAR(40) PRIMARY KEY,
+            domain_name VARCHAR(40) NOT NULL,
+            hop_count VARCHAR(40) NOT NULL,
+            ip_address_1 VARCHAR(40),
+            ip_address_2 VARCHAR(40),
+            ip_address_3 VARCHAR(40),
+            ip_address_4 VARCHAR(40),
+            ip_address_5 VARCHAR(40),
+            ip_address_6 VARCHAR(40),
+            ip_address_7 VARCHAR(40),
+            ip_address_8 VARCHAR(40),
+            ip_address_9 VARCHAR(40),
+            ip_address_10 VARCHAR(40),
+            ip_address_11 VARCHAR(40),
+            ip_address_12 VARCHAR(40),
+            ip_address_13 VARCHAR(40),
+            ip_address_14 VARCHAR(40),
+            ip_address_15 VARCHAR(40),
+            ip_address_16 VARCHAR(40),
+            ip_address_17 VARCHAR(40),
+            ip_address_18 VARCHAR(40),
+            ip_address_19 VARCHAR(40),
+            ip_address_20 VARCHAR(40),
+            average_ttl_hop_1 VARCHAR(40),
+            average_ttl_hop_2 VARCHAR(40),
+            average_ttl_hop_3 VARCHAR(40),
+            average_ttl_hop_4 VARCHAR(40),
+            average_ttl_hop_5 VARCHAR(40),
+            average_ttl_hop_6 VARCHAR(40),
+            average_ttl_hop_7 VARCHAR(40),
+            average_ttl_hop_8 VARCHAR(40),
+            average_ttl_hop_9 VARCHAR(40),
+            average_ttl_hop_10 VARCHAR(40),
+            average_ttl_hop_11 VARCHAR(40),
+            average_ttl_hop_12 VARCHAR(40),
+            average_ttl_hop_13 VARCHAR(40),
+            average_ttl_hop_14 VARCHAR(40),
+            average_ttl_hop_15 VARCHAR(40),
+            average_ttl_hop_16 VARCHAR(40),
+            average_ttl_hop_17 VARCHAR(40),
+            average_ttl_hop_18 VARCHAR(40),
+            average_ttl_hop_19 VARCHAR(40),
+            average_ttl_hop_20 VARCHAR(40)
+            );
+        """
+        
+        self.connection = self.create_server_connection(os.getenv('HOST'), os.getenv('USER'), os.getenv('PASSWORD'), os.getenv('DATABASE'), os.getenv('PORT'))
+        self.execute_query(self.connection, self.create_session_table)
         self.InitWindow()
  
+ 
+    def create_server_connection(self, host_name, user_name, user_password, db_name, port_num):
+        connection = None
+        try:
+            connection = mysql.connector.connect(
+                host=host_name,
+                user=user_name,
+                passwd=user_password,
+                database=db_name,
+                port=port_num
+            )
+            print("MySQL Database connection successful")
+        except Error as err:
+            print(f"Error: '{err}'")
+
+        return connection
+    
+    def create_database(self, connection, query):
+        cursor = connection.cursor()
+        try:
+            cursor.execute(query)
+            print("Database created successfully")
+        except Error as err:
+            print(f"Error: '{err}'")
+            
+    def execute_query(self, connection, query):
+        cursor = connection.cursor()
+        try:
+            cursor.execute(query)
+            connection.commit()
+            print("Query successful")
+        except Error as err:
+            print(f"Error: '{err}'")
+            
+    def execute_list_query(self, connection, sql, val):
+        cursor = connection.cursor()
+        try:
+            cursor.executemany(sql, val)
+            connection.commit()
+            print("Query successful")
+        except Error as err:
+            print(f"Error: '{err}'")
  
     def InitWindow(self):
         self.setWindowTitle(self.title)
@@ -167,7 +268,7 @@ class Ui_SecondWindow(QMainWindow):
             return
         
         #if the ip list is empty we need to fill it
-        if self.ips[0] == None:
+        if self.ips[0] == "0":
             for x in range (self.list_length):
                 self.ips[x] = ips[x]
         #check the ip list we filled each time to make sure we update any new ips 
@@ -226,6 +327,39 @@ class Ui_SecondWindow(QMainWindow):
             f.write("Hop: %s\t IP Address: %s\t Last five TTLs: %d, %d, %d, %d, %d" % (x, self.ips[x], int(self.average_ttls[x][0]), int(self.average_ttls[x][1]), int(self.average_ttls[x][2]), int(self.average_ttls[x][3]), int(self.average_ttls[x][4])))
             f.write("\n")
         f.close()
+        
+        self.sql = '''
+            INSERT INTO session (id, domain_name, hop_count, ip_address_1,
+            ip_address_2, ip_address_3, ip_address_4, ip_address_5, ip_address_6, ip_address_7, ip_address_8, ip_address_9,
+            ip_address_10, ip_address_11, ip_address_12, ip_address_13, ip_address_14, ip_address_15, ip_address_16, ip_address_17,
+            ip_address_18, ip_address_19, ip_address_20, average_ttl_hop_1, average_ttl_hop_2 , average_ttl_hop_3, average_ttl_hop_4,
+            average_ttl_hop_5, average_ttl_hop_6, average_ttl_hop_7, average_ttl_hop_8, average_ttl_hop_9, average_ttl_hop_10,
+            average_ttl_hop_11, average_ttl_hop_12, average_ttl_hop_13, average_ttl_hop_14, average_ttl_hop_15, average_ttl_hop_16,
+            average_ttl_hop_17, average_ttl_hop_18,average_ttl_hop_19, average_ttl_hop_20) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            '''
+            
+        self.updated_ttls_for_query = ["0"] * 20
+        
+        for x in range(self.list_length):
+            self.updated_ttls_for_query[x] = str(mean(list(self.average_ttls[x])))
+         
+        curr_time_corrected = curr_time.strftime("%m/%d/%Y %H:%M:%S")
+        curr_time_corrected = curr_time_corrected.replace(" ", "")
+        curr_time_corrected = curr_time_corrected.replace(":", "")
+        curr_time_corrected = curr_time_corrected.replace("/", "")
+        
+        self. val = [(str(curr_time_corrected), self.domain_name, str(self.list_length), self.ips[0], self.ips[1], self.ips[2], self.ips[3],
+                      self.ips[4], self.ips[5], self.ips[6], self.ips[7], self.ips[8], self.ips[9], self.ips[10], self.ips[11], self.ips[12],
+                      self.ips[13], self.ips[14], self.ips[15], self.ips[16], self.ips[17], self.ips[18], self.ips[19],
+                      self.updated_ttls_for_query[0], self.updated_ttls_for_query[1], self.updated_ttls_for_query[2], self.updated_ttls_for_query[3],
+                      self.updated_ttls_for_query[4], self.updated_ttls_for_query[5], self.updated_ttls_for_query[6], self.updated_ttls_for_query[7],
+                      self.updated_ttls_for_query[8], self.updated_ttls_for_query[9], self.updated_ttls_for_query[10], self.updated_ttls_for_query[11],
+                      self.updated_ttls_for_query[12], self.updated_ttls_for_query[13], self.updated_ttls_for_query[14], self.updated_ttls_for_query[15],
+                      self.updated_ttls_for_query[16], self.updated_ttls_for_query[17], self.updated_ttls_for_query[18], self.updated_ttls_for_query[19])]
+            
+        self.execute_list_query(self.connection, self.sql, self.val)
         
 
 if __name__ == '__main__':
